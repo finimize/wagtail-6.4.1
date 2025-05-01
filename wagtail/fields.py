@@ -139,6 +139,12 @@ class StreamField(models.Field):
         return name, path, args, kwargs
 
     def to_python(self, value):
+        value = self._to_python(value)
+        # attaches self reference for pickle support
+        value._stream_field = self
+        return value
+
+    def _to_python(self, value):
         if value is None or value == "":
             return StreamValue(self.stream_block, [])
         elif isinstance(value, StreamValue):
