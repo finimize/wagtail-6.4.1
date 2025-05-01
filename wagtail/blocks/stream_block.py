@@ -5,6 +5,7 @@ from collections.abc import Mapping, MutableSequence
 
 from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.apps import apps
 from django.forms.utils import ErrorList
 from django.utils.functional import cached_property
 from django.utils.html import format_html_join
@@ -708,6 +709,25 @@ class StreamValue(MutableSequence):
 
     def __str__(self):
         return self.__html__()
+
+    @staticmethod
+    def _deserialize_pickle_value(app_label, model_name, field_name, field_value):
+        """Returns StreamValue from pickled data"""
+        stream_field = apps.get_model(app_label, model_name)._meta.get_field(field_name)
+        stream_value = stream_field.stream_block.to_python(field_value)
+        stream_value._stream_field = stream_field
+        return stream_value
+
+    def __reduce__(self):
+        return (
+            self._deserialize_pickle_value,
+            (
+                self._stream_field.model._meta.app_label,
+                self._stream_field.model._meta.object_name,
+                self._stream_field.name,
+                self.get_prep_value(),
+            ),
+        )
 
 
 class StreamBlockAdapter(Adapter):
