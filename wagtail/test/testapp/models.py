@@ -32,6 +32,7 @@ from wagtail.admin.panels import (
 )
 from wagtail.blocks import (
     CharBlock,
+    ChoiceBlock,
     FieldBlock,
     ListBlock,
     RawHTMLBlock,
@@ -1488,10 +1489,24 @@ class ExtendedImageChooserBlock(ImageChooserBlock):
         return image_id
 
 
+def get_callable_choices():
+    return (
+        ("one", "One"),
+        ("two", "Two"),
+    )
+
+
 class StreamPage(Page):
     body = StreamField(
         [
             ("text", CharBlock()),
+            (
+                "choice",
+                ChoiceBlock(
+                    choices=get_callable_choices,
+                    required=False,
+                ),
+            ),
             ("rich_text", RichTextBlock()),
             ("image", ExtendedImageChooserBlock()),
             (
